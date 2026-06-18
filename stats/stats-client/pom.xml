@@ -11,6 +11,8 @@
 
     <artifactId>stats-client</artifactId>
 
+    <packaging>jar</packaging>
+
     <dependencies>
         <dependency>
             <groupId>ru.practicum</groupId>
