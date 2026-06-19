@@ -16,4 +16,10 @@ public class ErrorHandler {
                 e.getMessage()
         );
     }
+
+    @ExceptionHandler(ConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleConflict(ConflictException e) {
+        return new ErrorResponse("CONFLICT", e.getMessage());
+    }
 }
