@@ -38,6 +38,11 @@ public class EventServiceImpl implements EventService {
         Category category = categoryRepository.findById(dto.getCategory())
                 .orElseThrow(() -> new NotFoundException("Category with id=" + dto.getCategory() + " was not found"));
 
+        if (dto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new ConflictException(
+                    "Event date must be at least two hours after current time");
+        }
+
         Event event = EventMapper.toEntity(dto, initiator, category);
 
         return EventMapper.toDto(eventRepository.save(event));
@@ -123,6 +128,11 @@ public class EventServiceImpl implements EventService {
             event.setCategory(category);
         }
 
+        if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new ConflictException(
+                    "Event date must be at least two hours after current time");
+        }
+
         event.setState(EventState.PENDING);
 
         return EventMapper.toDto(eventRepository.save(event));
@@ -181,6 +191,11 @@ public class EventServiceImpl implements EventService {
                     throw new ConflictException("Only pending events can be published");
                 }
 
+                if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
+                    throw new ConflictException(
+                            "Event date must be at least one hour after publication");
+                }
+
                 event.setState(EventState.PUBLISHED);
                 event.setPublishedOn(LocalDateTime.now());
             } else if ("REJECT_EVENT".equals(request.getStateAction())) {
@@ -190,12 +205,6 @@ public class EventServiceImpl implements EventService {
 
                 event.setState(EventState.CANCELED);
             }
-        }
-
-        if (event.getPublishedOn() != null
-                && event.getEventDate().isBefore(event.getPublishedOn().plusHours(1))) {
-            throw new ConflictException(
-                    "Event date must be at least one hour after publication");
         }
 
         return EventMapper.toDto(eventRepository.save(event));
