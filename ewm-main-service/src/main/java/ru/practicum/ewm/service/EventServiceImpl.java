@@ -18,6 +18,8 @@ import ru.practicum.ewm.model.User;
 import ru.practicum.ewm.repository.CategoryRepository;
 import ru.practicum.ewm.repository.EventRepository;
 import ru.practicum.ewm.repository.UserRepository;
+import ru.practicum.ewm.dto.EventFullDto;
+import ru.practicum.ewm.dto.EventShortDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -211,24 +213,24 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDto> getPublishedEvents(int from, int size) {
+    public List<EventShortDto> getPublishedEvents(int from, int size) {
         return eventRepository
                 .findAllByState(
                         EventState.PUBLISHED,
                         PageRequest.of(from / size, size))
                 .stream()
-                .map(EventMapper::toDto)
+                .map(EventMapper::toShortDto)
                 .toList();
     }
 
     @Override
-    public EventDto getPublishedEventById(Long eventId) {
+    public EventFullDto getPublishedEventById(Long eventId) {
         Event event = eventRepository
                 .findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() ->
                         new NotFoundException(
                                 "Event with id=" + eventId + " was not found"));
 
-        return EventMapper.toDto(event);
+        return EventMapper.toFullDto(event);
     }
 }
