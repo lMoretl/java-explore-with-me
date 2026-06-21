@@ -192,6 +192,12 @@ public class EventServiceImpl implements EventService {
             }
         }
 
+        if (event.getPublishedOn() != null
+                && event.getEventDate().isBefore(event.getPublishedOn().plusHours(1))) {
+            throw new ConflictException(
+                    "Event date must be at least one hour after publication");
+        }
+
         return EventMapper.toDto(eventRepository.save(event));
     }
 }
