@@ -1,18 +1,13 @@
 package ru.practicum.ewm.dto;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class EventDto {
-
-    private Long id;
+public class AdminUpdateEventRequest {
 
     private String annotation;
 
@@ -20,7 +15,6 @@ public class EventDto {
 
     private String description;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     private LocationDto location;
@@ -33,12 +27,5 @@ public class EventDto {
 
     private String title;
 
-    private Long initiator;
-
-    private Long views;
-
-    private String state;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime publishedOn;
+    private String stateAction;
 }

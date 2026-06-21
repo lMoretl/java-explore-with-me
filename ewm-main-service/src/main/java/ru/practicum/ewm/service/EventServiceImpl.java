@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.dto.AdminUpdateEventRequest;
 import ru.practicum.ewm.dto.EventDto;
 import ru.practicum.ewm.dto.NewEventDto;
 import ru.practicum.ewm.dto.UpdateEventUserRequest;
@@ -18,6 +19,7 @@ import ru.practicum.ewm.repository.CategoryRepository;
 import ru.practicum.ewm.repository.EventRepository;
 import ru.practicum.ewm.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -122,6 +124,73 @@ public class EventServiceImpl implements EventService {
         }
 
         event.setState(EventState.PENDING);
+
+        return EventMapper.toDto(eventRepository.save(event));
+    }
+
+    @Override
+    @Transactional
+    public EventDto updateEventByAdmin(Long eventId, AdminUpdateEventRequest request) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+
+        if (request.getAnnotation() != null) {
+            event.setAnnotation(request.getAnnotation());
+        }
+
+        if (request.getDescription() != null) {
+            event.setDescription(request.getDescription());
+        }
+
+        if (request.getTitle() != null) {
+            event.setTitle(request.getTitle());
+        }
+
+        if (request.getEventDate() != null) {
+            event.setEventDate(request.getEventDate());
+        }
+
+        if (request.getPaid() != null) {
+            event.setPaid(request.getPaid());
+        }
+
+        if (request.getParticipantLimit() != null) {
+            event.setParticipantLimit(request.getParticipantLimit());
+        }
+
+        if (request.getRequestModeration() != null) {
+            event.setRequestModeration(request.getRequestModeration());
+        }
+
+        if (request.getLocation() != null) {
+            event.setLat(request.getLocation().getLat());
+            event.setLon(request.getLocation().getLon());
+        }
+
+        if (request.getCategory() != null) {
+            Category category = categoryRepository.findById(request.getCategory())
+                    .orElseThrow(() -> new NotFoundException(
+                            "Category with id=" + request.getCategory() + " was not found"));
+
+            event.setCategory(category);
+        }
+
+        if (request.getStateAction() != null) {
+            if ("PUBLISH_EVENT".equals(request.getStateAction())) {
+                if (event.getState() != EventState.PENDING) {
+                    throw new ConflictException("Only pending events can be published");
+                }
+
+                event.setState(EventState.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
+            } else if ("REJECT_EVENT".equals(request.getStateAction())) {
+                if (event.getState() == EventState.PUBLISHED) {
+                    throw new ConflictException("Published event cannot be rejected");
+                }
+
+                event.setState(EventState.CANCELED);
+            }
+        }
 
         return EventMapper.toDto(eventRepository.save(event));
     }

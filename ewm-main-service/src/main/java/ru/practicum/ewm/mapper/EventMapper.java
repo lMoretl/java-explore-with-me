@@ -53,6 +53,8 @@ public final class EventMapper {
                 .title(event.getTitle())
                 .initiator(event.getInitiator().getId())
                 .views(event.getViews())
+                .state(event.getState().name())
+                .publishedOn(event.getPublishedOn())
                 .build();
     }
 }
