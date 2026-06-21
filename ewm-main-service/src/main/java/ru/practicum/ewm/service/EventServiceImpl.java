@@ -209,4 +209,26 @@ public class EventServiceImpl implements EventService {
 
         return EventMapper.toDto(eventRepository.save(event));
     }
+
+    @Override
+    public List<EventDto> getPublishedEvents(int from, int size) {
+        return eventRepository
+                .findAllByState(
+                        EventState.PUBLISHED,
+                        PageRequest.of(from / size, size))
+                .stream()
+                .map(EventMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public EventDto getPublishedEventById(Long eventId) {
+        Event event = eventRepository
+                .findByIdAndState(eventId, EventState.PUBLISHED)
+                .orElseThrow(() ->
+                        new NotFoundException(
+                                "Event with id=" + eventId + " was not found"));
+
+        return EventMapper.toDto(event);
+    }
 }

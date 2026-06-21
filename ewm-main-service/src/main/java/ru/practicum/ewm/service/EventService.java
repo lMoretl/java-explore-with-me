@@ -18,4 +18,8 @@ public interface EventService {
     EventDto updateEvent(Long userId, Long eventId, UpdateEventUserRequest request);
 
     EventDto updateEventByAdmin(Long eventId, AdminUpdateEventRequest request);
+
+    List<EventDto> getPublishedEvents(int from, int size);
+
+    EventDto getPublishedEventById(Long eventId);
 }
