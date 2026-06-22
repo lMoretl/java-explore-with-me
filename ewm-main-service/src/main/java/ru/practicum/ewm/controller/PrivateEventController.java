@@ -4,9 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.EventDto;
+import ru.practicum.ewm.dto.EventRequestStatusUpdateRequest;
+import ru.practicum.ewm.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.dto.NewEventDto;
+import ru.practicum.ewm.dto.ParticipationRequestDto;
 import ru.practicum.ewm.dto.UpdateEventUserRequest;
 import ru.practicum.ewm.service.EventService;
+import ru.practicum.ewm.service.ParticipationRequestService;
 
 import java.util.List;
 
@@ -16,6 +20,7 @@ import java.util.List;
 public class PrivateEventController {
 
     private final EventService eventService;
+    private final ParticipationRequestService requestService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -42,5 +47,19 @@ public class PrivateEventController {
                                 @PathVariable Long eventId,
                                 @RequestBody UpdateEventUserRequest request) {
         return eventService.updateEvent(userId, eventId, request);
+    }
+
+    @GetMapping("/{eventId}/requests")
+    public List<ParticipationRequestDto> getEventRequests(@PathVariable Long userId,
+                                                          @PathVariable Long eventId) {
+        return requestService.getEventRequests(userId, eventId);
+    }
+
+    @PatchMapping("/{eventId}/requests")
+    public EventRequestStatusUpdateResult updateEventRequests(
+            @PathVariable Long userId,
+            @PathVariable Long eventId,
+            @RequestBody EventRequestStatusUpdateRequest request) {
+        return requestService.updateEventRequests(userId, eventId, request);
     }
 }
