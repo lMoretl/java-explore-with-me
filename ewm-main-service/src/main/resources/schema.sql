@@ -36,3 +36,20 @@ CREATE TABLE IF NOT EXISTS events (
     FOREIGN KEY (initiator_id) REFERENCES users(id),
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
+
+CREATE TABLE IF NOT EXISTS participation_requests (
+    id BIGSERIAL PRIMARY KEY,
+    created TIMESTAMP NOT NULL,
+    event_id BIGINT NOT NULL,
+    requester_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+
+    CONSTRAINT fk_participation_requests_event
+        FOREIGN KEY (event_id) REFERENCES events(id),
+
+    CONSTRAINT fk_participation_requests_requester
+        FOREIGN KEY (requester_id) REFERENCES users(id),
+
+    CONSTRAINT uq_participation_requests_requester_event
+        UNIQUE (requester_id, event_id)
+);
