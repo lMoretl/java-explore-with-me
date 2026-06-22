@@ -20,6 +20,9 @@ import ru.practicum.ewm.repository.EventRepository;
 import ru.practicum.ewm.repository.UserRepository;
 import ru.practicum.ewm.dto.EventFullDto;
 import ru.practicum.ewm.dto.EventShortDto;
+import ru.practicum.ewm.repository.ParticipationRequestRepository;
+import ru.practicum.ewm.model.RequestStatus;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +34,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final ParticipationRequestRepository requestRepository;
 
     @Override
     public EventDto create(Long userId, NewEventDto dto) {
@@ -213,13 +217,59 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventShortDto> getPublishedEvents(int from, int size) {
-        return eventRepository
-                .findAllByState(
-                        EventState.PUBLISHED,
-                        PageRequest.of(from / size, size))
+    public List<EventShortDto> getPublishedEvents(
+            String text,
+            List<Long> categories,
+            Boolean paid,
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
+            Boolean onlyAvailable,
+            String sort,
+            int from,
+            int size) {
+
+        LocalDateTime start = rangeStart != null ? rangeStart : LocalDateTime.now();
+
+        return eventRepository.findAllByState(EventState.PUBLISHED)
                 .stream()
-                .map(EventMapper::toShortDto)
+                .filter(event -> event.getEventDate().isAfter(start))
+                .filter(event -> rangeEnd == null || event.getEventDate().isBefore(rangeEnd))
+                .filter(event -> text == null || text.isBlank()
+                        || event.getAnnotation().toLowerCase().contains(text.toLowerCase())
+                        || event.getDescription().toLowerCase().contains(text.toLowerCase()))
+                .filter(event -> categories == null || categories.isEmpty()
+                        || categories.contains(event.getCategory().getId()))
+                .filter(event -> paid == null || event.getPaid().equals(paid))
+                .filter(event -> {
+                    if (!onlyAvailable) {
+                        return true;
+                    }
+
+                    if (event.getParticipantLimit() == 0) {
+                        return true;
+                    }
+
+                    long confirmedRequests =
+                            requestRepository.countByEventIdAndStatus(
+                                    event.getId(),
+                                    RequestStatus.CONFIRMED
+                            );
+
+                    return confirmedRequests < event.getParticipantLimit();
+                })
+                .sorted((e1, e2) -> {
+                    if ("VIEWS".equals(sort)) {
+                        return Long.compare(e2.getViews(), e1.getViews());
+                    }
+
+                    return e1.getEventDate().compareTo(e2.getEventDate());
+                })
+                .skip(from)
+                .limit(size)
+                .map(event -> EventMapper.toShortDto(
+                        event,
+                        requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED)
+                ))
                 .toList();
     }
 
@@ -231,6 +281,11 @@ public class EventServiceImpl implements EventService {
                         new NotFoundException(
                                 "Event with id=" + eventId + " was not found"));
 
-        return EventMapper.toFullDto(event);
+        long confirmedRequests = requestRepository.countByEventIdAndStatus(
+                event.getId(),
+                RequestStatus.CONFIRMED
+        );
+
+        return EventMapper.toFullDto(event, confirmedRequests);
     }
 }

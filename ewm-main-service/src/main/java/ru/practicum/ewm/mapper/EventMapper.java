@@ -58,11 +58,15 @@ public final class EventMapper {
     }
 
     public static EventShortDto toShortDto(Event event) {
+        return toShortDto(event, 0L);
+    }
+
+    public static EventShortDto toShortDto(Event event, Long confirmedRequests) {
         return EventShortDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.toDto(event.getCategory()))
-                .confirmedRequests(0L)
+                .confirmedRequests(confirmedRequests)
                 .eventDate(event.getEventDate())
                 .initiator(UserMapper.toShortDto(event.getInitiator()))
                 .paid(event.getPaid())
@@ -72,11 +76,15 @@ public final class EventMapper {
     }
 
     public static EventFullDto toFullDto(Event event) {
+        return toFullDto(event, 0L);
+    }
+
+    public static EventFullDto toFullDto(Event event, Long confirmedRequests) {
         return EventFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.toDto(event.getCategory()))
-                .confirmedRequests(0L)
+                .confirmedRequests(confirmedRequests)
                 .createdOn(event.getCreatedOn())
                 .description(event.getDescription())
                 .eventDate(event.getEventDate())
