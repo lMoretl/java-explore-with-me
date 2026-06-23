@@ -45,11 +45,19 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryDto> getAll(int from, int size) {
+        checkPageParams(from, size);
+
         return categoryRepository
                 .findAll(PageRequest.of(from / size, size))
                 .stream()
                 .map(CategoryMapper::toDto)
                 .toList();
+    }
+
+    private void checkPageParams(int from, int size) {
+        if (from < 0 || size <= 0) {
+            throw new IllegalArgumentException("Invalid pagination parameters");
+        }
     }
 
     @Override

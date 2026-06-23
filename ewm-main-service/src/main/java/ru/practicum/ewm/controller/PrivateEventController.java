@@ -1,5 +1,6 @@
 package ru.practicum.ewm.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class PrivateEventController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public EventDto create(@PathVariable Long userId,
-                           @RequestBody NewEventDto dto) {
+                           @Valid @RequestBody NewEventDto dto) {
         return eventService.create(userId, dto);
     }
 
@@ -45,7 +46,7 @@ public class PrivateEventController {
     @PatchMapping("/{eventId}")
     public EventDto updateEvent(@PathVariable Long userId,
                                 @PathVariable Long eventId,
-                                @RequestBody UpdateEventUserRequest request) {
+                                @Valid @RequestBody UpdateEventUserRequest request) {
         return eventService.updateEvent(userId, eventId, request);
     }
 
@@ -59,7 +60,7 @@ public class PrivateEventController {
     public EventRequestStatusUpdateResult updateEventRequests(
             @PathVariable Long userId,
             @PathVariable Long eventId,
-            @RequestBody EventRequestStatusUpdateRequest request) {
+            @Valid @RequestBody EventRequestStatusUpdateRequest request) {
         return requestService.updateEventRequests(userId, eventId, request);
     }
 }

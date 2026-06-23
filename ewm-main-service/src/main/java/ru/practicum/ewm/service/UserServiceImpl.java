@@ -26,11 +26,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getAll(int from, int size) {
+        checkPageParams(from, size);
+
         return userRepository
                 .findAll(PageRequest.of(from / size, size))
                 .stream()
                 .map(UserMapper::toDto)
                 .toList();
+    }
+
+    private void checkPageParams(int from, int size) {
+        if (from < 0 || size <= 0) {
+            throw new IllegalArgumentException("Invalid pagination parameters");
+        }
     }
 
     @Override

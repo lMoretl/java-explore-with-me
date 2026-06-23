@@ -7,6 +7,7 @@ import ru.practicum.ewm.dto.AdminUpdateEventRequest;
 import ru.practicum.ewm.dto.EventFullDto;
 import ru.practicum.ewm.dto.EventDto;
 import ru.practicum.ewm.service.EventService;
+import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,7 +47,7 @@ public class AdminEventController {
     @PatchMapping("/{eventId}")
     public EventDto updateEventByAdmin(
             @PathVariable Long eventId,
-            @RequestBody AdminUpdateEventRequest request) {
+            @Valid @RequestBody AdminUpdateEventRequest request) {
 
         return eventService.updateEventByAdmin(eventId, request);
     }

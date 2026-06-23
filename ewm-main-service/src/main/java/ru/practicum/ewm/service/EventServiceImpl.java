@@ -40,6 +40,22 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository requestRepository;
     private final StatsClient statsClient;
+    private void checkPageParams(int from, int size) {
+        if (from < 0 || size <= 0) {
+            throw new IllegalArgumentException("Invalid pagination parameters");
+        }
+    }
+
+    private void saveHit(HttpServletRequest request) {
+        EndpointHitDto hit = EndpointHitDto.builder()
+                .app("ewm-main-service")
+                .uri(request.getRequestURI())
+                .ip(request.getRemoteAddr())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        statsClient.saveHit(hit);
+    }
 
     @Override
     public EventDto create(Long userId, NewEventDto dto) {
@@ -61,6 +77,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventDto> getUserEvents(Long userId, int from, int size) {
+        checkPageParams(from, size);
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
@@ -230,6 +247,7 @@ public class EventServiceImpl implements EventService {
             LocalDateTime rangeEnd,
             int from,
             int size) {
+        checkPageParams(from, size);
 
         return eventRepository.findAll()
                 .stream()
@@ -265,17 +283,11 @@ public class EventServiceImpl implements EventService {
             int from,
             int size,
             HttpServletRequest request) {
+        checkPageParams(from, size);
 
         LocalDateTime start = rangeStart != null ? rangeStart : LocalDateTime.now();
 
-        EndpointHitDto hit = EndpointHitDto.builder()
-                .app("ewm-main-service")
-                .uri(request.getRequestURI())
-                .ip(request.getRemoteAddr())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        statsClient.saveHit(hit);
+        saveHit(request);
 
         return eventRepository.findAllByState(EventState.PUBLISHED)
                 .stream()
@@ -335,20 +347,13 @@ public class EventServiceImpl implements EventService {
             Long eventId,
             HttpServletRequest request) {
 
-        EndpointHitDto hit = EndpointHitDto.builder()
-                .app("ewm-main-service")
-                .uri(request.getRequestURI())
-                .ip(request.getRemoteAddr())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        statsClient.saveHit(hit);
-
         Event event = eventRepository
                 .findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() ->
                         new NotFoundException(
                                 "Event with id=" + eventId + " was not found"));
+
+        saveHit(request);
 
         long confirmedRequests = requestRepository.countByEventIdAndStatus(
                 event.getId(),
@@ -369,7 +374,7 @@ public class EventServiceImpl implements EventService {
 
         List<ViewStatsDto> stats = statsClient.getStats(
                 LocalDateTime.of(2000, 1, 1, 0, 0),
-                LocalDateTime.now(),
+                LocalDateTime.now().plusSeconds(1),
                 List.of(uri),
                 true
         );
