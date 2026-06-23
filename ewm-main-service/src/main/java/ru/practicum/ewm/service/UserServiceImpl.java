@@ -25,11 +25,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDto> getAll(int from, int size) {
+    public List<UserDto> getAll(List<Long> ids, int from, int size) {
         checkPageParams(from, size);
 
-        return userRepository
-                .findAll(PageRequest.of(from / size, size))
+        if (ids != null && !ids.isEmpty()) {
+            return userRepository.findAllById(ids)
+                    .stream()
+                    .map(UserMapper::toDto)
+                    .toList();
+        }
+
+        return userRepository.findAll(PageRequest.of(from / size, size))
                 .stream()
                 .map(UserMapper::toDto)
                 .toList();

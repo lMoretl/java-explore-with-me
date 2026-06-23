@@ -57,8 +57,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Category with id=" + dto.getCategory() + " was not found"));
 
         if (dto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ConflictException(
-                    "Event date must be at least two hours after current time");
+            throw new IllegalArgumentException("Event date must be at least two hours after current time");
         }
 
         Event event = EventMapper.toEntity(dto, initiator, category);
@@ -119,6 +118,10 @@ public class EventServiceImpl implements EventService {
         }
 
         if (request.getEventDate() != null) {
+            if (request.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+                throw new IllegalArgumentException("Event date must be at least two hours after current time");
+            }
+
             event.setEventDate(request.getEventDate());
         }
 
@@ -147,12 +150,15 @@ public class EventServiceImpl implements EventService {
             event.setCategory(category);
         }
 
-        if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ConflictException(
-                    "Event date must be at least two hours after current time");
+        event.setState(EventState.PENDING);
+
+        if ("CANCEL_REVIEW".equals(request.getStateAction())) {
+            event.setState(EventState.CANCELED);
         }
 
-        event.setState(EventState.PENDING);
+        if ("SEND_TO_REVIEW".equals(request.getStateAction())) {
+            event.setState(EventState.PENDING);
+        }
 
         return EventMapper.toDto(eventRepository.save(event));
     }
@@ -162,6 +168,11 @@ public class EventServiceImpl implements EventService {
     public EventDto updateEventByAdmin(Long eventId, AdminUpdateEventRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+
+        if (request.getEventDate() != null
+                && request.getEventDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Event date must be in the future");
+        }
 
         if (request.getAnnotation() != null) {
             event.setAnnotation(request.getAnnotation());
@@ -275,6 +286,10 @@ public class EventServiceImpl implements EventService {
             int size,
             HttpServletRequest request) {
         checkPageParams(from, size);
+
+        if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
+            throw new IllegalArgumentException("rangeStart must be before rangeEnd");
+        }
 
         LocalDateTime start = rangeStart != null ? rangeStart : LocalDateTime.now();
 
