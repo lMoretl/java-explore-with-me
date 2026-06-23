@@ -53,3 +53,17 @@ CREATE TABLE IF NOT EXISTS participation_requests (
     CONSTRAINT uq_participation_requests_requester_event
         UNIQUE (requester_id, event_id)
 );
+
+CREATE TABLE IF NOT EXISTS compilations (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(50) NOT NULL,
+    pinned BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS compilation_events (
+    compilation_id BIGINT NOT NULL,
+    event_id BIGINT NOT NULL,
+    PRIMARY KEY (compilation_id, event_id),
+    FOREIGN KEY (compilation_id) REFERENCES compilations(id) ON DELETE CASCADE,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+);

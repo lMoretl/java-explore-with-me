@@ -16,7 +16,10 @@ public class EventDto {
 
     private String annotation;
 
-    private Long category;
+    private CategoryDto category;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdOn;
 
     private String description;
 
@@ -33,7 +36,7 @@ public class EventDto {
 
     private String title;
 
-    private Long initiator;
+    private UserShortDto initiator;
 
     private Long views;
 
