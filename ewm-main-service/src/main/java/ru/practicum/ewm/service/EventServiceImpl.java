@@ -40,6 +40,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository requestRepository;
     private final StatsClient statsClient;
+    
     private void checkPageParams(int from, int size) {
         if (from < 0 || size <= 0) {
             throw new IllegalArgumentException("Invalid pagination parameters");
