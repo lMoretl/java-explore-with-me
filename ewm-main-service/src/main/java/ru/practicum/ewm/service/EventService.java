@@ -4,6 +4,7 @@ import ru.practicum.ewm.dto.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface EventService {
 
@@ -26,7 +27,19 @@ public interface EventService {
             Boolean onlyAvailable,
             String sort,
             int from,
-            int size);
+            int size,
+            HttpServletRequest request);
 
-    EventFullDto getPublishedEventById(Long eventId);
+    EventFullDto getPublishedEventById(
+            Long eventId,
+            HttpServletRequest request);
+
+    List<EventFullDto> getEventsByAdmin(
+            List<Long> users,
+            List<String> states,
+            List<Long> categories,
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
+            int from,
+            int size);
 }

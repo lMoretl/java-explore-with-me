@@ -22,6 +22,10 @@ import ru.practicum.ewm.dto.EventFullDto;
 import ru.practicum.ewm.dto.EventShortDto;
 import ru.practicum.ewm.repository.ParticipationRequestRepository;
 import ru.practicum.ewm.model.RequestStatus;
+import ru.practicum.stats.client.StatsClient;
+import ru.practicum.stats.dto.EndpointHitDto;
+import ru.practicum.stats.dto.ViewStatsDto;
+import jakarta.servlet.http.HttpServletRequest;
 
 
 import java.time.LocalDateTime;
@@ -35,6 +39,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository requestRepository;
+    private final StatsClient statsClient;
 
     @Override
     public EventDto create(Long userId, NewEventDto dto) {
@@ -217,6 +222,38 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public List<EventFullDto> getEventsByAdmin(
+            List<Long> users,
+            List<String> states,
+            List<Long> categories,
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
+            int from,
+            int size) {
+
+        return eventRepository.findAll()
+                .stream()
+                .filter(event -> users == null || users.isEmpty()
+                        || users.contains(event.getInitiator().getId()))
+                .filter(event -> states == null || states.isEmpty()
+                        || states.contains(event.getState().name()))
+                .filter(event -> categories == null || categories.isEmpty()
+                        || categories.contains(event.getCategory().getId()))
+                .filter(event -> rangeStart == null || event.getEventDate().isAfter(rangeStart))
+                .filter(event -> rangeEnd == null || event.getEventDate().isBefore(rangeEnd))
+                .skip(from)
+                .limit(size)
+                .map(event -> EventMapper.toFullDto(
+                        event,
+                        requestRepository.countByEventIdAndStatus(
+                                event.getId(),
+                                RequestStatus.CONFIRMED
+                        )
+                ))
+                .toList();
+    }
+
+    @Override
     public List<EventShortDto> getPublishedEvents(
             String text,
             List<Long> categories,
@@ -226,9 +263,19 @@ public class EventServiceImpl implements EventService {
             Boolean onlyAvailable,
             String sort,
             int from,
-            int size) {
+            int size,
+            HttpServletRequest request) {
 
         LocalDateTime start = rangeStart != null ? rangeStart : LocalDateTime.now();
+
+        EndpointHitDto hit = EndpointHitDto.builder()
+                .app("ewm-main-service")
+                .uri(request.getRequestURI())
+                .ip(request.getRemoteAddr())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        statsClient.saveHit(hit);
 
         return eventRepository.findAllByState(EventState.PUBLISHED)
                 .stream()
@@ -257,6 +304,20 @@ public class EventServiceImpl implements EventService {
 
                     return confirmedRequests < event.getParticipantLimit();
                 })
+                .map(event -> {
+                    EventShortDto dto =
+                            EventMapper.toShortDto(
+                                    event,
+                                    requestRepository.countByEventIdAndStatus(
+                                            event.getId(),
+                                            RequestStatus.CONFIRMED
+                                    )
+                            );
+
+                    dto.setViews(getViews(event.getId()));
+
+                    return dto;
+                })
                 .sorted((e1, e2) -> {
                     if ("VIEWS".equals(sort)) {
                         return Long.compare(e2.getViews(), e1.getViews());
@@ -266,15 +327,23 @@ public class EventServiceImpl implements EventService {
                 })
                 .skip(from)
                 .limit(size)
-                .map(event -> EventMapper.toShortDto(
-                        event,
-                        requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED)
-                ))
                 .toList();
     }
 
     @Override
-    public EventFullDto getPublishedEventById(Long eventId) {
+    public EventFullDto getPublishedEventById(
+            Long eventId,
+            HttpServletRequest request) {
+
+        EndpointHitDto hit = EndpointHitDto.builder()
+                .app("ewm-main-service")
+                .uri(request.getRequestURI())
+                .ip(request.getRemoteAddr())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        statsClient.saveHit(hit);
+
         Event event = eventRepository
                 .findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() ->
@@ -286,6 +355,29 @@ public class EventServiceImpl implements EventService {
                 RequestStatus.CONFIRMED
         );
 
-        return EventMapper.toFullDto(event, confirmedRequests);
+        EventFullDto dto =
+                EventMapper.toFullDto(event, confirmedRequests);
+
+        dto.setViews(getViews(event.getId()));
+
+        return dto;
+    }
+
+    private long getViews(Long eventId) {
+
+        String uri = "/events/" + eventId;
+
+        List<ViewStatsDto> stats = statsClient.getStats(
+                LocalDateTime.of(2000, 1, 1, 0, 0),
+                LocalDateTime.now(),
+                List.of(uri),
+                true
+        );
+
+        if (stats.isEmpty()) {
+            return 0L;
+        }
+
+        return stats.get(0).getHits();
     }
 }

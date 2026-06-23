@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.EventFullDto;
 import ru.practicum.ewm.dto.EventShortDto;
 import ru.practicum.ewm.service.EventService;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,7 +32,8 @@ public class PublicEventController {
             @RequestParam(defaultValue = "false") Boolean onlyAvailable,
             @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
 
         return eventService.getPublishedEvents(
                 text,
@@ -42,12 +44,16 @@ public class PublicEventController {
                 onlyAvailable,
                 sort,
                 from,
-                size
+                size,
+                request
         );
     }
 
     @GetMapping("/{eventId}")
-    public EventFullDto getPublishedEventById(@PathVariable Long eventId) {
-        return eventService.getPublishedEventById(eventId);
+    public EventFullDto getPublishedEventById(
+            @PathVariable Long eventId,
+            HttpServletRequest request) {
+
+        return eventService.getPublishedEventById(eventId, request);
     }
 }
