@@ -3,11 +3,11 @@ package ru.practicum.ewm.mapper;
 import ru.practicum.ewm.dto.CompilationDto;
 import ru.practicum.ewm.dto.NewCompilationDto;
 import ru.practicum.ewm.model.Compilation;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class CompilationMapper {
-
-    private CompilationMapper() {
-    }
 
     public static Compilation toEntity(NewCompilationDto dto) {
         return Compilation.builder()

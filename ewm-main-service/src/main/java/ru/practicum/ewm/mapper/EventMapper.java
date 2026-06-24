@@ -9,13 +9,13 @@ import ru.practicum.ewm.model.Category;
 import ru.practicum.ewm.model.Event;
 import ru.practicum.ewm.model.EventState;
 import ru.practicum.ewm.model.User;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class EventMapper {
-
-    private EventMapper() {
-    }
 
     public static Event toEntity(NewEventDto dto, User initiator, Category category) {
         LocationDto location = dto.getLocation();

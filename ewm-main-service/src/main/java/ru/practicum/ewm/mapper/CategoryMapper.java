@@ -3,11 +3,11 @@ package ru.practicum.ewm.mapper;
 import ru.practicum.ewm.dto.CategoryDto;
 import ru.practicum.ewm.dto.NewCategoryDto;
 import ru.practicum.ewm.model.Category;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class CategoryMapper {
-
-    private CategoryMapper() {
-    }
 
     public static Category toEntity(NewCategoryDto dto) {
         return Category.builder()

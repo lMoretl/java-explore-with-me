@@ -12,6 +12,7 @@ import ru.practicum.ewm.mapper.EventMapper;
 import ru.practicum.ewm.model.*;
 import ru.practicum.ewm.repository.CategoryRepository;
 import ru.practicum.ewm.repository.EventRepository;
+import ru.practicum.ewm.specification.EventSpecification;
 import ru.practicum.ewm.repository.ParticipationRequestRepository;
 import ru.practicum.ewm.repository.UserRepository;
 import ru.practicum.stats.client.StatsClient;
@@ -160,7 +161,7 @@ public class EventServiceImpl implements EventService {
             event.setState(EventState.PENDING);
         }
 
-        return EventMapper.toDto(eventRepository.save(event));
+        return EventMapper.toDto(event);
     }
 
     @Override
@@ -237,7 +238,7 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        return EventMapper.toDto(eventRepository.save(event));
+        return EventMapper.toDto(event);
     }
 
     @Override
@@ -251,18 +252,17 @@ public class EventServiceImpl implements EventService {
             int size) {
         checkPageParams(from, size);
 
-        return eventRepository.findAll()
+        return eventRepository.findAll(
+                        EventSpecification.adminFilter(
+                                users,
+                                states,
+                                categories,
+                                rangeStart,
+                                rangeEnd
+                        ),
+                        PageRequest.of(from / size, size)
+                )
                 .stream()
-                .filter(event -> users == null || users.isEmpty()
-                        || users.contains(event.getInitiator().getId()))
-                .filter(event -> states == null || states.isEmpty()
-                        || states.contains(event.getState().name()))
-                .filter(event -> categories == null || categories.isEmpty()
-                        || categories.contains(event.getCategory().getId()))
-                .filter(event -> rangeStart == null || event.getEventDate().isAfter(rangeStart))
-                .filter(event -> rangeEnd == null || event.getEventDate().isBefore(rangeEnd))
-                .skip(from)
-                .limit(size)
                 .map(event -> EventMapper.toFullDto(
                         event,
                         requestRepository.countByEventIdAndStatus(

@@ -66,7 +66,7 @@ public class CompilationServiceImpl implements CompilationService {
             compilation.setEvents(events);
         }
 
-        return CompilationMapper.toDto(compilationRepository.save(compilation));
+        return CompilationMapper.toDto(compilation);
     }
 
     @Override
