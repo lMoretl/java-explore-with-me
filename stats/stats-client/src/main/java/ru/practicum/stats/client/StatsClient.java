@@ -44,7 +44,7 @@ public class StatsClient {
         }
 
         ResponseEntity<List<ViewStatsDto>> response = restTemplate.exchange(
-                builder.encode().toUriString(),
+                builder.build().encode().toUri(),
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {
