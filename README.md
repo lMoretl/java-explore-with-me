@@ -258,7 +258,7 @@ The collection automatically performs the following scenario:
 
 Feature implementation:
 
-https://github.com/lMoretl/java-explore-with-me/pull/4
+https://github.com/lMoretl/java-explore-with-me/pull/5
 
 ---
 
